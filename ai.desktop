@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=AI
+Exec=/usr/bin/ai %f
+StartupNotify=false
+Terminal=true
+Categories=System;
+Name[en_US]=AI

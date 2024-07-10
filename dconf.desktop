@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=dconf
+Exec=/usr/bin/load %f
+StartupNotify=false
+Terminal=false
+Categories=System;
+Name[en_US]=dconf.desktop

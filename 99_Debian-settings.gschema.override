@@ -1,0 +1,74 @@
+[org.gnome.shell]
+favorite-apps=['google-chrome.desktop', 'org.gnome.Terminal.desktop', 'nemo.desktop', 'org.gnome.Software.desktop', 'arduino.desktop', 'EASYEDA.desktop', 'code.desktop']
+
+enabled-extensions=['arcmenu@arcmenu.com', 'compiz-windows-effect@hermes83.github.com', 'desktop-cube@schneegans.github.com','dash-to-dock@micxgx.gmail.com', 'pop-shell@system76.com']
+
+[org.gnome.desktop.background]
+picture-uri = 'file:///usr/share/backgrounds/wallpaper.png'
+picture-uri-dark = 'file:///usr/share/backgrounds/wallpaper.png'
+
+[org.gnome.desktop.screensaver]
+picture-uri = 'file:///usr/share/backgrounds/wallpaper.png'
+
+[org.gnome.desktop.interface]
+color-scheme='prefer-dark'
+gtk-theme = "Adwaita-dark"
+icon-theme = "McMojave-circle-dark"
+cursor-theme = "Qogir"
+document-font-name='JetBrainsMono Nerd Font 11'
+font-antialiasing='rgba'
+font-hinting='slight'
+font-name='JetBrainsMono Nerd Font 11'
+monospace-font-name='JetBrainsMonoNL Nerd Font 11'
+toolkit-accessibility=false
+
+[org.gnome.desktop.wm.preferences]
+button-layout='appmenu:minimize,maximize,close'
+titlebar-font='JetBrainsMono Nerd Font Medium 11'
+
+[org.gnome.Terminal.Legacy.Settings]
+theme-variant = 'dark'
+
+[org.gnome.shell.extensions.dash-to-dock]
+disable-overview-on-startup=true
+show-mounts-only-mounted=false
+show-mounts-network=true
+dock-position='BOTTOM'
+dock-fixed=true
+custom-theme-shrink=true
+dash-max-icon-size=32
+intellihide-mode='ALL_WINDOWS'
+intellihide=true
+icon-size-fixed=true
+custom-theme-shrink=true
+running-indicator-style='DOTS'
+extend-height=false
+scroll-action='switch-workspace'
+click-action='focus-or-previews'
+shift-click-action='launch'
+middle-click-action='launch'
+transparency-mode='FIXED'
+shift-middle-click-action='minimize'
+background-opacity=0.5
+custom-background-color=false
+dash-max-icon-size=32
+dock-position='BOTTOM'
+height-fraction=0.90000000000000002
+show-apps-at-top=true
+transparency-mode='FIXED'
+
+[shell/extensions/arcmenu]
+arc-menu-icon=28
+menu-background-color='rgba(48,48,49,0.98)'
+menu-border-color='rgb(60,60,60)'
+menu-button-appearance='Icon'
+menu-button-icon='Menu_Icon'
+menu-foreground-color='rgb(223,223,223)'
+menu-item-active-bg-color='rgb(25,98,163)'
+menu-item-active-fg-color='rgb(255,255,255)'
+menu-item-hover-bg-color='rgb(21,83,158)'
+menu-item-hover-fg-color='rgb(255,255,255)'
+menu-layout='Mint'
+menu-separator-color='rgba(255,255,255,0.1)'
+prefs-visible-page=0
+search-entry-border-radius=(true, 25)

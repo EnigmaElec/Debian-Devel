@@ -19,15 +19,14 @@ cat <<EOF>> /etc/initramfs-tools/initramfs.conf
 COMPRESSLEVEL=19
 EOF
 
-##add schemas
+##add schemas(ubuntu/debian)
 touch /usr/share/glib-2.0/schemas/99_ubuntu-settings.gschema.override
 
 cat << EOF >> /usr/share/glib-2.0/schemas/99_ubuntu-settings.gschema.override
 [org.gnome.shell]
-favorite-apps=['google-chrome.desktop', 'org.gnome.Terminal.desktop', 'nemo.desktop', 'org.gnome.Software.desktop', 'arduino2.desktop', 'EASYEDA.desktop', 'Visual Studio Code.desktop']
+favorite-apps=['google-chrome.desktop', 'org.gnome.Terminal.desktop', 'nemo.desktop', 'org.gnome.Software.desktop', 'arduino.desktop', 'EASYEDA.desktop', 'code.desktop']
 
-[org.gnome.shell]
-enabled-extensions=['arcmenu@arcmenu.com', 'compiz-windows-effect@hermes83.github.com', 'desktop-cube@schneegans.github.com', 'azclock@azclock.gitlab.com', 'openbar@neuromorph', 'gsconnect@andyholmes.github.io' ]
+enabled-extensions=['arcmenu@arcmenu.com', 'compiz-windows-effect@hermes83.github.com', 'desktop-cube@schneegans.github.com','dash-to-dock@micxgx.gmail.com', 'pop-shell@system76.com']
 
 [org.gnome.desktop.background]
 picture-uri = 'file:///usr/share/backgrounds/wallpaper.png'
@@ -37,32 +36,25 @@ picture-uri-dark = 'file:///usr/share/backgrounds/wallpaper.png'
 picture-uri = 'file:///usr/share/backgrounds/wallpaper.png'
 
 [org.gnome.desktop.interface]
-gtk-theme = "Yaru-dark"
+color-scheme='prefer-dark'
+gtk-theme = "Adwaita-dark"
 icon-theme = "McMojave-circle-dark"
 cursor-theme = "Qogir"
-document-font-name='JetBrainsMono Nerd Font Bold 11'
+document-font-name='JetBrainsMono Nerd Font 11'
 font-antialiasing='rgba'
 font-hinting='slight'
-font-name='JetBrainsMono Nerd Font Light 11'Kecubunk/Cubic-script
-icon-theme='McMojave-circle-dark'
-monospace-font-name='JetBrainsMonoNL Nerd Font Propo Italic 11'
+font-name='JetBrainsMono Nerd Font 11'
+monospace-font-name='JetBrainsMonoNL Nerd Font 11'
+toolkit-accessibility=false
 
-[org.gnome.desktop.interface:ubuntu]
-gtk-theme = "Yaru-dark"
-icon-theme = "McMojave-circle-dark"
-cursor-theme = "Qogir"
-document-font-name='JetBrainsMono Nerd Font Bold 11'
-font-antialiasing='rgba'
-font-hinting='slight'
-font-name='JetBrainsMono Nerd Font Light 11'
-icon-theme='McMojave-circle-dark'
-monospace-font-name='JetBrainsMonoNL Nerd Font Propo Italic 11'
+[org.gnome.desktop.wm.preferences]
+button-layout='appmenu:minimize,maximize,close'
+titlebar-font='JetBrainsMono Nerd Font Medium 11'
 
 [org.gnome.Terminal.Legacy.Settings]
 theme-variant = 'dark'
-font='JetBrainsMono Nerd Font 12'
 
-[org.gnome.shell.extensions.dash-to-dock:ubuntu]
+[org.gnome.shell.extensions.dash-to-dock]
 disable-overview-on-startup=true
 show-mounts-only-mounted=false
 show-mounts-network=true
@@ -83,9 +75,15 @@ middle-click-action='launch'
 transparency-mode='FIXED'
 shift-middle-click-action='minimize'
 background-opacity=0.5
+custom-background-color=false
+dash-max-icon-size=32
+dock-position='BOTTOM'
+height-fraction=0.90000000000000002
+show-apps-at-top=true
+transparency-mode='FIXED'
 
-[org.gnome.shell.extensions.arcmenu:ubuntu]
-arc-menu-icon=4
+[shell/extensions/arcmenu]
+arc-menu-icon=28
 menu-background-color='rgba(48,48,49,0.98)'
 menu-border-color='rgb(60,60,60)'
 menu-button-appearance='Icon'
@@ -313,6 +311,9 @@ e 3628 42 #arc menu
 
 ### change lockscreen extensions
 glib-compile-schemas /usr/share/glib-2.0/schemas/
+
+### adding zram-tool
+apt install zram-tools && echo -e "ALGO=zstd\nPERCENT=65" | sudo tee -a /etc/default/zramswap && systemctl reload zramswap.service
 
 ########### Install starship ##########################
 curl -sS https://starship.rs/install.sh | sh
