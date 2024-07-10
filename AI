@@ -1,0 +1,75 @@
+#!/bin/bash 
+
+declare -x FRAME
+declare -x FRAME_INTERVAL
+
+function icon() {
+      FRAME=("⠋" "⠙" "⠹" "⠸" "⠼" "⠴" "⠦" "⠧" "⠇" "⠏")
+      FRAME_INTERVAL=0.1
+	  local step=0
+
+	  while [ "$step" -lt "${#CMDS[@]}" ]; do
+		${CMDS[$step]} & pid=$!
+
+		while ps -p $pid &>/dev/null; do
+		  echo -ne "\\r[   ] ${STEPS[$step]} ..."
+
+		  for k in "${!FRAME[@]}"; do
+		    echo -ne "\\r[ ${FRAME[k]} ]"
+		    sleep $FRAME_INTERVAL
+		  done
+		done
+
+		echo -ne "\\r[ ✔ ] ${STEPS[$step]}\\n"
+		step=$((step + 1))
+	  done
+
+}
+
+STEPS='Installing AI'
+CMDS='sleep 2'
+icon 
+curl -fsSL https://ollama.com/install.sh | sh
+
+STEPS='Downloads Models'
+CMDS='sleep 2'
+echo "This progress is to downloads AI models, and it takes 4,7GB of youre HDD"
+read -p  "Do you want to continue ? " answer
+case ${answer:0:1} in
+    y|Y )
+        echo Contiune to downloads models
+        icon
+        ollama pull llama3:8b
+    ;;
+    * )
+        #echo No
+        exit 
+    ;;
+esac
+
+STEPS='Creating gpt file'
+CMDS='sleep 2'
+icon
+sudo touch /usr/bin/gpt
+sudo chmod +x /usr/bin/gpt
+cat << EOF > ~/c
+#!/bin/bash
+ollama run llama3
+EOF
+sudo mv c /usr/bin/gpt
+sudo chmod +x /usr/bin/gpt
+
+STEPS='Runnings GPT with llama3'
+CMDS='sleep 2'
+echo "This will Execute GPT file to test,in next time just type [ gpt ] in youre terminal and type the questions, ctrl + D, /bye,or type exit to exit from AI"
+read -p  "Do you want to continue ? " ans
+case ${ans:0:1} in
+    y|Y )
+        echo Contiune to run it 
+        gpt
+    ;;
+    * )
+        #echo No
+        exit 
+    ;;
+esac
