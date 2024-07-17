@@ -1,344 +1,298 @@
 #!/bin/bash
 
-## Export environment
-## ------------------
-export PYTHONWARNINGS=ignore
+dist=`awk '{print $1 " " $2}' /etc/issue`
 
-## Configure APT sources
-## ---------------------
-add-apt-repository -y main
-add-apt-repository -y restricted
-add-apt-repository -y universe
-add-apt-repository -y multiverse
+declare -x FRAME
+declare -x FRAME_INTERVAL
 
-### Update & Upgrade the system
-apt update && apt upgrade -y
+function icon() {
+      FRAME=("⠋" "⠙" "⠹" "⠸" "⠼" "⠴" "⠦" "⠧" "⠇" "⠏")
+      FRAME_INTERVAL=0.1
+	  local step=0
 
-### add compression level to initramfs
-cat <<EOF>> /etc/initramfs-tools/initramfs.conf
-COMPRESSLEVEL=19
-EOF
+	  while [ "$step" -lt "${#CMDS[@]}" ]; do
+		${CMDS[$step]} & pid=$!
 
-##add schemas(ubuntu/debian)
-touch /usr/share/glib-2.0/schemas/99_ubuntu-settings.gschema.override
+		while ps -p $pid &>/dev/null; do
+		  echo -ne "\\r[   ] ${STEPS[$step]} ..."
 
-cat << EOF >> /usr/share/glib-2.0/schemas/99_ubuntu-settings.gschema.override
-[org.gnome.shell]
-favorite-apps=['google-chrome.desktop', 'org.gnome.Terminal.desktop', 'nemo.desktop', 'org.gnome.Software.desktop', 'arduino.desktop', 'EASYEDA.desktop', 'code.desktop']
+		  for k in "${!FRAME[@]}"; do
+		    echo -ne "\\r[ ${FRAME[k]} ]"
+		    sleep $FRAME_INTERVAL
+		  done
+		done
 
-enabled-extensions=['arcmenu@arcmenu.com', 'compiz-windows-effect@hermes83.github.com', 'desktop-cube@schneegans.github.com','dash-to-dock@micxgx.gmail.com', 'pop-shell@system76.com']
+		echo -ne "\\r[ ✔ ] ${STEPS[$step]}\\n"
+		step=$((step + 1))
+	  done
 
-[org.gnome.desktop.background]
-picture-uri = 'file:///usr/share/backgrounds/wallpaper.png'
-picture-uri-dark = 'file:///usr/share/backgrounds/wallpaper.png'
-
-[org.gnome.desktop.screensaver]
-picture-uri = 'file:///usr/share/backgrounds/wallpaper.png'
-
-[org.gnome.desktop.interface]
-color-scheme='prefer-dark'
-gtk-theme = "Adwaita-dark"
-icon-theme = "McMojave-circle-dark"
-cursor-theme = "Qogir"
-document-font-name='JetBrainsMono Nerd Font 11'
-font-antialiasing='rgba'
-font-hinting='slight'
-font-name='JetBrainsMono Nerd Font 11'
-monospace-font-name='JetBrainsMonoNL Nerd Font 11'
-toolkit-accessibility=false
-
-[org.gnome.desktop.wm.preferences]
-button-layout='appmenu:minimize,maximize,close'
-titlebar-font='JetBrainsMono Nerd Font Medium 11'
-
-[org.gnome.Terminal.Legacy.Settings]
-theme-variant = 'dark'
-
-[org.gnome.shell.extensions.dash-to-dock]
-disable-overview-on-startup=true
-show-mounts-only-mounted=false
-show-mounts-network=true
-dock-position='BOTTOM'
-dock-fixed=true
-custom-theme-shrink=true
-dash-max-icon-size=32
-intellihide-mode='ALL_WINDOWS'
-intellihide=true
-icon-size-fixed=true
-custom-theme-shrink=true
-running-indicator-style='DOTS'
-extend-height=false
-scroll-action='switch-workspace'
-click-action='focus-or-previews'
-shift-click-action='launch'
-middle-click-action='launch'
-transparency-mode='FIXED'
-shift-middle-click-action='minimize'
-background-opacity=0.5
-custom-background-color=false
-dash-max-icon-size=32
-dock-position='BOTTOM'
-height-fraction=0.90000000000000002
-show-apps-at-top=true
-transparency-mode='FIXED'
-
-[shell/extensions/arcmenu]
-arc-menu-icon=28
-menu-background-color='rgba(48,48,49,0.98)'
-menu-border-color='rgb(60,60,60)'
-menu-button-appearance='Icon'
-menu-button-icon='Menu_Icon'
-menu-foreground-color='rgb(223,223,223)'
-menu-item-active-bg-color='rgb(25,98,163)'
-menu-item-active-fg-color='rgb(255,255,255)'
-menu-item-hover-bg-color='rgb(21,83,158)'
-menu-item-hover-fg-color='rgb(255,255,255)'
-menu-layout='Mint'
-menu-separator-color='rgba(255,255,255,0.1)'
-prefs-visible-page=0
-search-entry-border-radius=(true, 25)
-EOF
-
-## Remove `zsys`
-## -------------
-apt -y purge --auto-remove zsys >/dev/null 2>&1
-
-## Disable error reporting
-## -----------------------
-sed -i "s/enabled=1/enabled=0/" /etc/default/apport
-
-## Remove Snap
-## -----------------------
-apt purge --autoremove -y snapd
-rm -rf ~/snap
-rm -rf /snap /var/snap /var/lib/snapd /var/cache/snapd /usr/lib/snapd
-# Prevent reinstall
-apt-mark hold snap snapd
-
-# Prevent reinstall
-cat <<EOF | sudo tee /etc/apt/preferences.d/snapd
-Package: snapd
-Pin: origin *
-Pin-Priority: -1
-EOF
-
-## Install flatpak
-## -----------------------
-apt install -y flatpak gnome-software-plugin-flatpak
-## add flatpak repo
-flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-
-## remove games
-## -----------------------
-apt purge --autoremove -y gnome-2048 aisleriot atomix gnome-chess five-or-more hitori iagno gnome-klotski lightsoff gnome-mahjongg gnome-mines gnome-nibbles quadrapassel four-in-a-row gnome-robots gnome-sudoku swell-foop tali gnome-taquin gnome-tetravex
-
-## remove apps
-## ----------------------
-apt purge --autoremove -y gnome-characters remmina thunderbird transmission-gtk* libreoffice* gnome-todo gnome-logs nautilus rhythmbox* totem*
-
-### Add applications
-### --------------------
-apt install -y zram-config curl wget git conky nemo neofetch python3 python3-pip python3-venv gnome-shell-extensions gnome-tweaks chrome-gnome-shell gnome-extensions-manager gnome-user-share gnome-nettool 
-
-###Set Python3 as default
-### --------------------
-update-alternatives --install /usr/bin/python python /usr/bin/python3 1
-mv /usr/lib/python3.11/EXTERNALLY-MANAGED /usr/lib/python3.11/EXTERNALLY-MANAGED.old
-
-apt install gnome-control-center --reinstall -y 
-
-apt install openjdk-8-jdk -y 
-
-### Remove fonts
-### --------------------
-apt purge --ignore-missing -y \
-fonts-beng-extra \
-fonts-beng \
-fonts-deva-extra \
-fonts-deva \
-fonts-gargi \
-fonts-gubbi \
-fonts-gujr-extra \
-fonts-gujr \
-fonts-guru-extra \
-fonts-guru \
-fonts-indic \
-fonts-kacst-one \
-fonts-kacst \
-fonts-kalapi \
-fonts-khmeros-core \
-fonts-knda \
-fonts-lao \
-fonts-lklug-sinhala \
-fonts-lohit-beng-assamese \
-fonts-lohit-beng-bengali \
-fonts-lohit-deva \
-fonts-lohit-gujr \
-fonts-lohit-guru \
-fonts-lohit-knda \
-fonts-lohit-mlym \
-fonts-lohit-orya \
-fonts-lohit-taml-classical \
-fonts-lohit-taml \
-fonts-lohit-telu \
-fonts-mlym \
-fonts-nakula \
-fonts-navilu \
-fonts-noto-cjk \
-fonts-orya-extra \
-fonts-orya \
-fonts-pagul \
-fonts-sahadeva \
-fonts-samyak-deva \
-fonts-samyak-gujr \
-fonts-samyak-mlym \
-fonts-samyak-taml \
-fonts-sarai \
-fonts-sil-abyssinica \
-fonts-sil-padauk \
-fonts-smc-anjalioldlipi \
-fonts-smc-chilanka \
-fonts-smc-dyuthi \
-fonts-smc-karumbi \
-fonts-smc-keraleeyam \
-fonts-smc-manjari \
-fonts-smc-meera \
-fonts-smc-rachana \
-fonts-smc-raghumalayalamsans \
-fonts-smc-suruma \
-fonts-smc-uroob \
-fonts-smc \
-fonts-taml \
-fonts-telu-extra \
-fonts-telu \
-fonts-thai-tlwg \
-fonts-tibetan-machine \
-fonts-tlwg-garuda-ttf \
-fonts-tlwg-garuda \
-fonts-tlwg-kinnari-ttf \
-fonts-tlwg-kinnari \
-fonts-tlwg-laksaman-ttf \
-fonts-tlwg-laksaman \
-fonts-tlwg-loma-ttf \
-fonts-tlwg-loma \
-fonts-tlwg-mono-ttf \
-fonts-tlwg-mono \
-fonts-tlwg-norasi-ttf \
-fonts-tlwg-norasi \
-fonts-tlwg-purisa-ttf \
-fonts-tlwg-purisa \
-fonts-tlwg-sawasdee-ttf \
-fonts-tlwg-sawasdee \
-fonts-tlwg-typewriter-ttf \
-fonts-tlwg-typewriter \
-fonts-tlwg-typist-ttf \
-fonts-tlwg-typist \
-fonts-tlwg-typo-ttf \
-fonts-tlwg-typo \
-fonts-tlwg-umpush-ttf \
-fonts-tlwg-umpush \
-fonts-tlwg-waree-ttf \
-fonts-tlwg-waree \
-fonts-yrsa-rasa
-
-### Remove unused icons
-###--------------------
-rm -rf /usr/share/icons/mozc
-rm -rf /usr/share/icons/redglass
-rm -rf /usr/share/icons/ubuntu-mono-dark
-rm -rf /usr/share/icons/ubuntu-mono-light
-rm -rf /usr/share/icons/whiteglass
-rm -rf /usr/share/icons/Yaru-bark
-rm -rf /usr/share/icons/Yaru-bark-dark
-rm -rf /usr/share/icons/Yaru-blue
-rm -rf /usr/share/icons/Yaru-blue-dark
-rm -rf /usr/share/icons/Yaru-magenta
-rm -rf /usr/share/icons/Yaru-magenta-dark
-rm -rf /usr/share/icons/Yaru-olive
-rm -rf /usr/share/icons/Yaru-olive-dark
-rm -rf /usr/share/icons/Yaru-prussiangreen
-rm -rf /usr/share/icons/Yaru-prussiangreen-dark
-rm -rf /usr/share/icons/Yaru-purple
-rm -rf /usr/share/icons/Yaru-purple-dark
-rm -rf /usr/share/icons/Yaru-red
-rm -rf /usr/share/icons/Yaru-red-dark
-rm -rf /usr/share/icons/Yaru-sage
-rm -rf /usr/share/icons/Yaru-sage-dark
-rm -rf /usr/share/icons/Yaru-viridian
-rm -rf /usr/share/icons/Yaru-viridian-dark
-
-### Remove unused themes
-###---------------------
-rm -rf /usr/share/themes/Emacs
-rm -rf /usr/share/themes/Raleigh
-rm -rf /usr/share/themes/Yaru-bark
-rm -rf /usr/share/themes/Yaru-bark-dark
-rm -rf /usr/share/themes/Yaru-blue
-rm -rf /usr/share/themes/Yaru-blue-dark
-rm -rf /usr/share/themes/Yaru-dark-hdpi
-rm -rf /usr/share/themes/Yaru-dark-xhdpi
-rm -rf /usr/share/themes/Yaru-hdpi
-rm -rf /usr/share/themes/Yaru-magenta
-rm -rf /usr/share/themes/Yaru-magenta-dark
-rm -rf /usr/share/themes/Yaru-olive
-rm -rf /usr/share/themes/Yaru-olive-dark
-rm -rf /usr/share/themes/Yaru-prussiangreen
-rm -rf /usr/share/themes/Yaru-prussiangreen-dark
-rm -rf /usr/share/themes/Yaru-purple
-rm -rf /usr/share/themes/Yaru-purple-dark
-rm -rf /usr/share/themes/Yaru-red
-rm -rf /usr/share/themes/Yaru-red-dark
-rm -rf /usr/share/themes/Yaru-sage
-rm -rf /usr/share/themes/Yaru-sage-dark
-rm -rf /usr/share/themes/Yaru-viridian
-rm -rf /usr/share/themes/Yaru-viridian-dark
-rm -rf /usr/share/themes/Yaru-xhdpi
-
-rm -rf /usr/share/aisleriot
-rm -rf /usr/share/branding
-rm -rf /usr/share/gnome-mahjongg
-
-#add extensions
+}
 tput setaf 3
-echo "Installing gnome-extensions"
+STEPS='Checking youre system'
+CMDS='sleep 2'
+icon
+echo ""
+hostnamectl
+echo ""
+
+#setup llama3
+STEPS='Ollama status checking...'
+CMDS='sleep 2'
+icon
+if [[ -f /usr/local/bin/ollama ]]; then
+    echo "Ollama is already installed in $dist"
+	ollama pull llama3:8b
+else
+	ficurl -fsSL https://ollama.com/install.sh | sh
+	ollama pull llama3:8b
+fi
+
+STEPS='Installing Dependencies'
+CMDS='sleep 2'
+icon
+#install dependencies for python
+sudo apt-get install python3 python3-dev python3-pip portaudio19-dev -y
+
+STEPS='Set python3 as default'
+CMDS='sleep 2'
+icon
+#install dependencies for python
+sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 1
+sudo mv /usr/lib/python3.11/EXTERNALLY-MANAGED /usr/lib/python3.11/EXTERNALLY-MANAGED.old
+
+STEPS='instaling python dependencies'
+CMDS='sleep 2'
+icon
+pip3 install pyaudio
+pip3 install SpeechRecognition
+pip3 install gTTS
+pip3 install chime
+
+
+STEPS='Creating scripts'
+CMDS='sleep 2'
+icon
+touch ~/inem.py
+
+STEPS='Generating Code'
+CMDS='sleep 2'
+icon
+cat <<EOF>> ~/inem.py
+#!/usr/bin/python
+
+import speech_recognition as src
+from gtts import gTTS
+from playsound import playsound
+import chime
+import requests
+from llama3 import Llama3Model
+import webbrowser
+import os
+import urllib.request
+import re
+
+
+model = Llama3Model()
+chime.theme('zelda')
+
+#os.system("python a.py")
+
+def intro():
+    teks = ('Halo nama saya inem, katakan sesuatu setelah bunyi beep')
+    bahasa = 'id'
+    def speak():
+        suara = gTTS(text=teks,lang=bahasa, slow=False)
+        suara.save('sound.mp3')
+        playsound('sound.mp3')
+    speak()
+    wakeword()
+    
+def wakeword():
+    mendengar = src.Recognizer()
+    with src.Microphone() as source:
+        chime.info()
+        print('+ Menunggu wakeword ...')
+        suara = mendengar.listen(source,phrase_time_limit=2)
+        try:
+            dengar = mendengar.recognize_google(suara,language='id-ID')
+            dengar = str(dengar).lower()
+            print('+ Wakeword Diterima...')
+            print('+ You: ', dengar)
+            
+            if('inem' in dengar):
+                teks = ('Ya tuan, apa yang bisa saya bantu, silahkan katakan sesuatu setelah bunyi beep')
+                bahasa = 'id'
+                def speak():
+                    suara = gTTS(text=teks,lang=bahasa, slow=False)
+                    suara.save('sound.mp3')
+                    playsound('sound.mp3')
+                speak()
+                chat()
+            else:
+                teks = ('maaf saya tidak mengerti maksud anda, silahkan anda ulangi kembali seteah bunyi beep')
+                bahasa = 'id'
+                def speak():
+                    suara = gTTS(text=teks,lang=bahasa, slow=False)
+                    suara.save('sound.mp3')
+                    playsound('sound.mp3')
+                speak()
+                wakeword()
+        except:
+            pass
+            wakeword()
+            
+def chat():
+    chime.info()
+    mendengar = src.Recognizer()
+    with src.Microphone() as source:
+        chime.info()
+        print('+ Menunggu Perintah ...')
+        suara = mendengar.listen(source,phrase_time_limit=5)
+        try:
+            dengar = mendengar.recognize_google(suara,language='id-ID')
+            dengar = str(dengar).lower()
+            print('+ Perintah Diterima...')
+            print('+ You: ', dengar)
+
+            if("buka youtube" in dengar ):             
+                youtube()
+            if('buka terminal'in dengar):
+                terminal()
+            if('buka browser'in dengar):
+               browser()
+
+            response = model.prompt(dengar)
+            print("+ Inem:", response)
+            teks = (response)
+            bahasa = 'id'
+            def speak():
+                suara = gTTS(text=teks,lang=bahasa, slow=False)
+                suara.save('sound.mp3')
+                playsound('sound.mp3')
+            speak()
+            wakeword()
+        except:
+            pass
+            wakeword()
+
+
+def youtube():
+    teks = ("Ucapkan kata kunci pencarian setelah bunyi beep")
+    bahasa = 'id'
+    def speak():
+        suara = gTTS(text=teks,lang=bahasa, slow=False)
+        suara.save('sound.mp3')
+        playsound('sound.mp3')
+    speak()
+    chime.info()
+
+    mendengar = src.Recognizer()
+    with src.Microphone() as source:
+         print('+ Menunggu Kata kunci pencarian ...')
+         suara = mendengar.listen(source,phrase_time_limit=5)
+         try:
+          dengar = mendengar.recognize_google(suara,language='id-ID')
+          dengar = str(dengar).lower()
+          print('+ Kata kunci pencarian diterima...')           
+          print('+ You: ', dengar)
+
+          keyword=(dengar)
+          webbrowser.open("https://www.youtube.com/results?search_query="+keyword,new=2)
+
+          teks = ("Membuka youtube dengan kata kunci" + dengar)
+          bahasa = 'id'
+          def speak():
+              suara = gTTS(text=teks,lang=bahasa, slow=False)
+              suara.save('sound.mp3')
+              playsound('sound.mp3')
+          speak()
+          wakeword()
+         except:
+            pass
+            wakeword()
+
+
+def terminal():
+    teks = ("Membuka gnome-terminal")
+    bahasa = 'id'
+    def speak():
+        suara = gTTS(text=teks,lang=bahasa, slow=False)
+        suara.save('sound.mp3')
+        playsound('sound.mp3')
+    speak()
+    os.system("gnome-terminal")
+    wakeword()
+    
+def browser():
+    teks = ("Ucapkan kata kunci pencarian setelah bunyi beep")
+    bahasa = 'id'
+    def speak():
+        suara = gTTS(text=teks,lang=bahasa, slow=False)
+        suara.save('sound.mp3')
+        playsound('sound.mp3')
+    speak()
+    chime.info()
+
+    mendengar = src.Recognizer()
+    with src.Microphone() as source:
+         print('+ Menunggu Kata kunci pencarian ...')
+         suara = mendengar.listen(source,phrase_time_limit=5)
+         try:
+          dengar = mendengar.recognize_google(suara,language='id-ID')
+          dengar = str(dengar).lower()
+          print('+ Kata kunci pencarian diterima...')           
+          print('+ You: ', dengar)
+
+          keyword=(dengar)
+          webbrowser.open("https://www.google.com/search?q="+keyword,new=2)
+
+          teks = ("Membuka browser dengan kata kunci" + dengar)
+          bahasa = 'id'
+          def speak():
+              suara = gTTS(text=teks,lang=bahasa, slow=False)
+              suara.save('sound.mp3')
+              playsound('sound.mp3')
+          speak()
+          wakeword()
+         except:
+            pass
+            wakeword()
+intro()
+
+EOF
+
+STEPS='Creating executeable scripts'
+CMDS='sleep 2'
+icon
+touch ~/inem
+
+cat << EOF >> ~/inem
+#!/usr/bin/bash
+python /usr/bin/inem.py
+EOF
+
+chmod +x ~/inem
+chmod +x ~/inem.py
+
+sudo mv ~/inem /usr/bin/inem
+sudo mv ~/inem.py /usr/bin/inem.py
+
+STEPS='How to use !'
+CMDS='sleep 2'
+icon
+echo "============================================ How To ======================================================="
+echo "Saat [+ Menunggu wakeword..] muncul sebutkan kata kunci [Inem] kemudian setelah muncul [+ Menunggu Perintah ...] sampaikanlah pertanyaan yang ingin anda tanyakan"
+echo ""
+echo "Pemrosesan jawban tergantung pada spesifikasi komputer anda, apabila specs komputer anda mempergunakan GPU maka pemrosesan jawaban akan lebih cepat jika tidak maka system akan mempergunakan CPU"
+echo ""
+echo "Untuk berikutnya anda dapat mengetikkan [inem] pada terminal anda untuk mengeksekusi perintah selanjutnya"
+echo "==========================================================================================================="
+echo ""
+sleep 5
+
+STEPS='Running the scripts'
+CMDS='sleep 2'
+icon
+inem
+
 tput sgr0
-
-e 307 42  #dashtodock
-e 3210 42 #compiz lamp
-e 4648 42 #desktop cube
-e 5156 42 #desktop clock
-e 3628 42 #arc menu
-
-### change lockscreen extensions
-glib-compile-schemas /usr/share/glib-2.0/schemas/
-
-### adding zram-tool
-apt install zram-tools && echo -e "ALGO=zstd\nPERCENT=65" | sudo tee -a /etc/default/zramswap && systemctl reload zramswap.service
-
-########### Install starship ##########################
-curl -sS https://starship.rs/install.sh | sh
-wget -P /usr/share/fonts/JetBrainsMono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip && cd /usr/share/fonts/JetBrainsMono/ && unzip JetBrainsMono.zip && rm JetBrainsMono.zip && fc-cache -fv
-wget https://raw.githubusercontent.com/Kecubunk/mybash/main/config.txt
-cat config.txt >> ~/.bashrc
-cat config.txt >> /etc/skel/.bashrc
-mkdir /etc/skel/.config/
-wget -P /etc/skel/.config/ https://raw.githubusercontent.com/Kecubunk/mybash/main/starship.toml
-wget -P ~/.config/ https://raw.githubusercontent.com/Kecubunk/mybash/main/starship.toml
-rm -f config.txt
-
-## Keep system safe
-## ----------------
-apt -y update
-apt -y remove && apt -y autoremove
-apt -y clean && apt -y autoclean
-
-#update initramfs
-update-initramfs -u
-
-# Remove history
-rm -f ~/.bash_history
-rm -f /root/.bash_history
-
-
-
-
