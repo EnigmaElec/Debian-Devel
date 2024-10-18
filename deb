@@ -153,6 +153,10 @@ glib-compile-schemas /usr/share/glib-2.0/schemas/
 apt purge --autoremove -y libreoffice* gnome-text-editor* xterm thunderbird* transmmision-gtk* xiterm+thai* mlterm* mozc* shotwell* Rhythmbox* anthy* goldendict* hdate-applet* debian-faq*  debian-reference* firefox-esr* nautilus* yelp* gnome-logs* gnome-characters* gnome-fonts-viewer* evolution* 
 
 
+wget http://www.mirbsd.org/~tg/Debs/sources.txt/wtf-bookworm.sources
+sudo mv wtf-bookworm.sources /etc/apt/sources.list.d/
+sudo apt update
+
 apt -y update
 apt -y remove && apt -y autoremove
 apt -y clean && apt -y autoclean
